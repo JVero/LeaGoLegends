@@ -37,7 +37,12 @@ type ChampionMasteryUnit struct {
 	LastPlayTime                 int  `json:"lastPlayTime"`
 }
 
-// ChampionMasteryResponse dklfajd
+func (u ChampionMasteryUnit) String() string {
+	b, _ := json.MarshalIndent(u, "", "  ")
+	return string(b)
+}
+
+// ChampionMasteryResponse is the slice of ChampionMasteryUnits that gets returned by the API
 type ChampionMasteryResponse []ChampionMasteryUnit
 
 // CreateAPIInterface , given an API key, returns an interface for which a user can interact with the Riot API
@@ -82,6 +87,9 @@ func main() {
 		fmt.Println(time.Now())
 	}
 
+	// Get and print the ChampionMastery slice.  TODO:  Figure out how to print it all pretty-like
 	champresponse := *Interface.GetChampionMasteryForID("59459147")
-	fmt.Printf("%+v", champresponse[0])
+	for _, val := range champresponse {
+		fmt.Println(val)
+	}
 }
