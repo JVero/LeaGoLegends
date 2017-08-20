@@ -21,7 +21,12 @@ type APIInterface struct {
 	apiKey    string
 	rateLimit time.Duration
 	throttler <-chan time.Time
-	// probably want rate-limiting information in the interface itself, so lets try time.Ticker
+	// probably want rate-limiting information in the interface itself, so lets try <-chan time.Time
+}
+
+// CreateAPIInterface , given an API key, returns an interface for which a user can interact with the Riot API
+func CreateAPIInterface(apiKey string, ratelimit time.Duration) APIInterface {
+	return APIInterface{apiKey, ratelimit, time.Tick(time.Second / ratelimit)}
 }
 
 // ChampionMasteryUnit is the response to the API query
@@ -37,6 +42,7 @@ type ChampionMasteryUnit struct {
 	LastPlayTime                 int  `json:"lastPlayTime"`
 }
 
+// Essentially a pretty-print for the structure
 func (u *ChampionMasteryUnit) String() string {
 	b, _ := json.MarshalIndent(u, "", "  ")
 	return string(b)
@@ -45,24 +51,12 @@ func (u *ChampionMasteryUnit) String() string {
 // ChampionMasteryResponse is the slice of ChampionMasteryUnits that gets returned by the API
 type ChampionMasteryResponse []ChampionMasteryUnit
 
-// CreateAPIInterface , given an API key, returns an interface for which a user can interact with the Riot API
-func CreateAPIInterface(apiKey string, ratelimit time.Duration) APIInterface {
-	Interface := APIInterface{}
-	Interface.apiKey = apiKey
-	Interface.rateLimit = ratelimit // 100 requests per minute
-	Interface.throttler = time.Tick(time.Second / Interface.rateLimit)
-
-	return Interface
-}
-
 // GetChampionMasteryForID returns an array of champion masteries
 func (a *APIInterface) GetChampionMasteryForID(summonerID string) *ChampionMasteryResponse {
 
 	req := "https://na1.api.riotgames.com/lol/champion-mastery/v3/champion-masteries/by-summoner/" + summonerID + "?api_key=" + a.apiKey
-	println(req)
 	resp, err := http.Get(req)
 
-	fmt.Println(resp)
 	// TODO, handle response codes
 	// TODO, handle rate limiting here or at the end
 
@@ -76,13 +70,14 @@ func (a *APIInterface) GetChampionMasteryForID(summonerID string) *ChampionMaste
 	return champresponse
 }
 
+//
 func main() {
 	Token, err := config.ReadConfig()
 	if err != nil {
 		fmt.Println(err.Error())
 	}
 	fmt.Println(Token)
-	Interface := CreateAPIInterface(Token, 100)
+	Interface := CreateAPIInterface(Token, 10)
 
 	// Implementation of throttler
 	for i := 0; i < 10; i++ {
@@ -92,6 +87,5 @@ func main() {
 
 	// Get and print the ChampionMastery slice.  TODO:  Figure out how to print it all pretty-like
 	champresponse := *Interface.GetChampionMasteryForID("59459147")
-	fmt.Println("we're here")
-	fmt.Println(champresponse[0])
+	fmt.Println(champresponse[0].String())
 }
