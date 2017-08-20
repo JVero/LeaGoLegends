@@ -19,7 +19,6 @@ func ReadConfig() (string, error) {
 		fmt.Println(err.Error())
 		return "", err
 	}
-
 	Token = string(file)
 	return Token, nil
 }

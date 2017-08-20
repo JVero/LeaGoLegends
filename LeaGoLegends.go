@@ -37,7 +37,7 @@ type ChampionMasteryUnit struct {
 	LastPlayTime                 int  `json:"lastPlayTime"`
 }
 
-func (u ChampionMasteryUnit) String() string {
+func (u *ChampionMasteryUnit) String() string {
 	b, _ := json.MarshalIndent(u, "", "  ")
 	return string(b)
 }
@@ -59,8 +59,11 @@ func CreateAPIInterface(apiKey string, ratelimit time.Duration) APIInterface {
 func (a *APIInterface) GetChampionMasteryForID(summonerID string) *ChampionMasteryResponse {
 
 	req := "https://na1.api.riotgames.com/lol/champion-mastery/v3/champion-masteries/by-summoner/" + summonerID + "?api_key=" + a.apiKey
+	println(req)
 	resp, err := http.Get(req)
 
+	fmt.Println(resp)
+	// TODO, handle response codes
 	// TODO, handle rate limiting here or at the end
 
 	if err != nil {
@@ -89,7 +92,6 @@ func main() {
 
 	// Get and print the ChampionMastery slice.  TODO:  Figure out how to print it all pretty-like
 	champresponse := *Interface.GetChampionMasteryForID("59459147")
-	for _, val := range champresponse {
-		fmt.Println(val)
-	}
+	fmt.Println("we're here")
+	fmt.Println(champresponse[0])
 }
