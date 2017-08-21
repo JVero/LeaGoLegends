@@ -30,6 +30,17 @@ func CreateAPIInterface(apiKey string, ratelimit time.Duration) APIInterface {
 	return APIInterface{apiKey, ratelimit, time.Tick(time.Second / ratelimit)}
 }
 
+// ParseRateLimitPairsFromHeaders is a function that reads a header and returns the rate limit for your request
+func ParseRateLimitPairsFromHeaders(h http.Header) map[string]string {
+	rateArr := strings.Split(h["X-App-Rate-Limit-Count"][0], ",")
+	rates := make(map[string]string, 3)
+	for _, val := range rateArr {
+		d := strings.Split(val, ":")
+		rates[d[1]] = d[0]
+	}
+	return rates
+}
+
 // ChampionMasteryUnit is the response to the API query
 type ChampionMasteryUnit struct {
 	ChampionLevel                int  `json:"championLevel"`
@@ -50,18 +61,6 @@ type ChampionMasteryResponse []ChampionMasteryUnit
 func (u *ChampionMasteryUnit) String() string {
 	b, _ := json.MarshalIndent(u, "", "  ")
 	return string(b)
-}
-
-// ParseRateLimitPairsFromHeaders is a function that reads a header and returns the rate limit for your request
-func ParseRateLimitPairsFromHeaders(h http.Header) map[string]string {
-	rateArr := strings.Split(h["X-App-Rate-Limit-Count"][0], ",")
-	rates := make(map[string]string, 3)
-	for _, val := range rateArr {
-		d := strings.Split(val, ":")
-		rates[d[1]] = d[0]
-	}
-	return rates
-
 }
 
 // GetChampionMasteryForID returns an array of champion masteries
