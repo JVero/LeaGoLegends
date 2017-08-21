@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	"./config"
@@ -42,21 +43,33 @@ type ChampionMasteryUnit struct {
 	LastPlayTime                 int  `json:"lastPlayTime"`
 }
 
+// ChampionMasteryResponse is the slice of ChampionMasteryUnits that gets returned by the API
+type ChampionMasteryResponse []ChampionMasteryUnit
+
 // Essentially a pretty-print for the structure
 func (u *ChampionMasteryUnit) String() string {
 	b, _ := json.MarshalIndent(u, "", "  ")
 	return string(b)
 }
 
-// ChampionMasteryResponse is the slice of ChampionMasteryUnits that gets returned by the API
-type ChampionMasteryResponse []ChampionMasteryUnit
+// ParseRateLimitPairsFromHeaders is a function that reads a header and returns the rate limit for your request
+func ParseRateLimitPairsFromHeaders(h http.Header) map[string]string {
+	rateArr := strings.Split(h["X-App-Rate-Limit-Count"][0], ",")
+	rates := make(map[string]string, 3)
+	for _, val := range rateArr {
+		d := strings.Split(val, ":")
+		rates[d[1]] = d[0]
+	}
+	return rates
+
+}
 
 // GetChampionMasteryForID returns an array of champion masteries
 func (a *APIInterface) GetChampionMasteryForID(summonerID string) *ChampionMasteryResponse {
 
 	req := "https://na1.api.riotgames.com/lol/champion-mastery/v3/champion-masteries/by-summoner/" + summonerID + "?api_key=" + a.apiKey
 	resp, err := http.Get(req)
-
+	ParseRateLimitPairsFromHeaders(resp.Header)
 	// TODO, handle response codes
 	// TODO, handle rate limiting here or at the end
 
@@ -80,12 +93,12 @@ func main() {
 	Interface := CreateAPIInterface(Token, 10)
 
 	// Implementation of throttler
-	for i := 0; i < 10; i++ {
+	/*for i := 0; i < 10; i++ {
 		<-Interface.throttler
 		fmt.Println(time.Now())
-	}
+	}*/
 
 	// Get and print the ChampionMastery slice.  TODO:  Figure out how to print it all pretty-like
-	champresponse := *Interface.GetChampionMasteryForID("59459147")
+	champresponse := *Interface.GetChampionMasteryForID("59459147") // 59459147 is my user id :^)
 	fmt.Println(champresponse[0].String())
 }
