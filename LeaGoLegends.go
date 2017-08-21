@@ -32,7 +32,9 @@ func CreateAPIInterface(apiKey string, ratelimit time.Duration) APIInterface {
 
 // ParseRateLimitPairsFromHeaders is a function that reads a header and returns the rate limit for your request
 func ParseRateLimitPairsFromHeaders(h http.Header) map[string]string {
+	fmt.Println(h)
 	rateArr := strings.Split(h["X-App-Rate-Limit-Count"][0], ",")
+	fmt.Println(h)
 	rates := make(map[string]string, 3)
 	for _, val := range rateArr {
 		d := strings.Split(val, ":")
@@ -59,7 +61,10 @@ type ChampionMasteryResponse []ChampionMasteryUnit
 
 // Essentially a pretty-print for the structure
 func (u *ChampionMasteryUnit) String() string {
-	b, _ := json.MarshalIndent(u, "", "  ")
+	b, err := json.MarshalIndent(u, "", "  ")
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 	return string(b)
 }
 
@@ -68,6 +73,7 @@ func (a *APIInterface) GetChampionMasteryForID(summonerID string) *ChampionMaste
 
 	req := "https://na1.api.riotgames.com/lol/champion-mastery/v3/champion-masteries/by-summoner/" + summonerID + "?api_key=" + a.apiKey
 	resp, err := http.Get(req)
+	fmt.Println(req)
 	ParseRateLimitPairsFromHeaders(resp.Header)
 	// TODO, handle response codes
 	// TODO, handle rate limiting here or at the end
@@ -78,7 +84,9 @@ func (a *APIInterface) GetChampionMasteryForID(summonerID string) *ChampionMaste
 	champresponse := new(ChampionMasteryResponse)
 	body, err := ioutil.ReadAll(resp.Body)
 	err = json.Unmarshal(body, &champresponse)
-
+	if err != nil {
+		fmt.Println("error: ", err.Error())
+	}
 	return champresponse
 }
 
@@ -96,8 +104,9 @@ func main() {
 		<-Interface.throttler
 		fmt.Println(time.Now())
 	}*/
-
 	// Get and print the ChampionMastery slice.  TODO:  Figure out how to print it all pretty-like
-	champresponse := *Interface.GetChampionMasteryForID("59459147") // 59459147 is my user id :^)
-	fmt.Println(champresponse[0].String())
+	for i := 1; i < 2; i++ {
+		champresponse := *Interface.GetChampionMasteryForID("59459147") // 59459147 is my user id :^)
+		fmt.Println(champresponse[0].String())
+	}
 }
